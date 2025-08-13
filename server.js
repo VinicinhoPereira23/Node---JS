@@ -1,0 +1,81 @@
+const express = require('express');
+const app = express();
+
+//permitir receber dados em JSON
+app.use(express.json());
+//simula um "banco de Dados" em memoria
+let produtos = [
+    {id:1, nome:"Mouse"},
+    {id:2, nome:"Teclado"}
+];
+
+//Rota principal
+app.get('/',(req,res)=>{
+    res.send('Servidor Express rodando...')
+});
+
+//Rota sobre
+app.get('/sobre',(req,res)=>{
+    res.send('Página Sobre')
+});
+
+//Rota produtos
+app.get('/produtos',(req,res)=>{
+    res.send('Página Produtos')
+});
+//GET - Lista todos os produtos
+app.get('/api/produtos', (req,res)=>{
+    res.json(produtos);
+});
+
+//POST
+app.post('api/produtos',(req,res)=>{
+    const novoProduto ={
+        id:produtos.length +1, 
+        nome:req.body.nome
+    };
+    produtos.push(novoProduto);
+    res.status(201).json(novoProduto);
+})
+
+//PUT
+app.put('/api/produtos/:id',(req,res)=>{
+    const id = parseInt(req.params.id, 10);
+    const produto = produtos.find(p=> p.id ===id);
+    if(isNaN(id)){
+        return res.status(400).json({ mensagem: 'O ID fornecido não é um número válido'});
+    }
+    if (!produto){
+        return res.status(404).json({mensagem: 'produto não encontrado'});
+    }
+    const novoNome = req.body.nome;
+    if (!novoNome || novoNome.trim() === ''){
+        return res.status(400).json({mensagem:'O campo "nomes é obrigatório e não pode ser vazio'});
+    }
+    produto.nome = novoNome;
+    res.json(produto);
+})
+//delete
+app.delete('/api/produtos/:>id', (req,res)=>{
+    const id = parseInt(req.params.id, 10);
+    const produto = produtos.find(p=> p.id === id);
+    if(isNaN(id)){
+        return res.status(400).json({mensagem: 'O ID fornecido não é um número válido'});
+    }
+    const tamanhoOriginal = produtos.length;
+    produtos = produtos.filter(p => p.id !== id)
+    if(tamanhoOriginal === produtos.length){
+        return res.status(404).json({mensagem:'Produto não encontrado'})
+    }
+    res.status(204).send();
+});
+
+//Inicia o servidor na porta 3000
+app.listen(3000, ()=>{
+    console.log('http://localhost:3000')
+})
+
+// get - lista
+//post - incluir
+//put - altera
+//delete - apagar
